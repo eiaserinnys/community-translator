@@ -1,0 +1,27 @@
+{
+  "name": "@community-translator/extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "wxt build -b chrome --mv3 && node scripts/verify-manifest.mjs",
+    "dev": "wxt -b chrome --mv3",
+    "lint": "eslint .",
+    "postinstall": "wxt prepare",
+    "test": "vitest run",
+    "typecheck": "wxt prepare && tsc --noEmit"
+  },
+  "dependencies": {
+    "@community-translator/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@community-translator/eslint-config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "fake-indexeddb": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "wxt": "catalog:"
+  }
+}

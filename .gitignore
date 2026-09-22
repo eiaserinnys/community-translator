@@ -1,0 +1,8 @@
+.DS_Store
+.turbo/
+node_modules/
+dist/
+.output/
+.wxt/
+coverage/
+apps/server/.env

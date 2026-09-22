@@ -1,0 +1,150 @@
+openapi: 3.1.0
+info:
+  title: Community Translator API
+  version: 0.1.0
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Report service health
+      responses:
+        '200':
+          description: The service is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /translate:
+    post:
+      operationId: translate
+      summary: Translate one community message or draft
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslateRequest'
+      responses:
+        '200':
+          description: The translated text.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/TranslationFailed'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  responses:
+    BadRequest:
+      description: The request was invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Bearer authentication failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    TranslationFailed:
+      description: The translation backend did not produce a result.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+      required:
+        - status
+    TranslationTarget:
+      type: string
+      enum:
+        - KO
+        - EN-US
+    TranslationTone:
+      type: string
+      enum:
+        - casual
+        - neutral
+    TranslationSite:
+      type: string
+      enum:
+        - discord
+        - reddit
+        - x
+    TranslateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        target:
+          $ref: '#/components/schemas/TranslationTarget'
+        tone:
+          $ref: '#/components/schemas/TranslationTone'
+        site:
+          $ref: '#/components/schemas/TranslationSite'
+      required:
+        - text
+        - target
+    TranslateResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        text:
+          type: string
+          minLength: 1
+        target:
+          $ref: '#/components/schemas/TranslationTarget'
+        model:
+          type: string
+          minLength: 1
+        glossaryTerms:
+          type: integer
+          minimum: 0
+          description: How many glossary entries were injected into the prompt.
+      required:
+        - text
+        - target
+        - model
+        - glossaryTerms
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          enum:
+            - invalid_request
+            - unauthorized
+            - translation_busy
+            - translation_timeout
+            - translation_unavailable
+            - translation_failed
+        message:
+          type: string
+          minLength: 1
+          description: Korean text the extension shows to the reader as-is.
+      required:
+        - code
+        - message
