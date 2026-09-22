@@ -49,7 +49,35 @@ install -m 644 /home/eias/seosoyoung-workspace/.projects/eb_lore/content/glossar
 
 ## 3. haniel 등록
 
-PR 머지 후, `deploy/haniel/community-translator.yaml.example`의 리포 객체 전체를 `haniel_update_repo_config`에, 서비스 객체 전체를 `haniel_update_service_config`에 전달합니다. 관련 없는 리포와 서비스는 보존하십시오. 그다음 `community-translator` 리포에 대해 `haniel_pull`을 호출합니다. 이 명시적 pull이 빌드 훅을 돌리고 `community-translator-server`만 재시작합니다.
+**이 호스트의 haniel에는 MCP 표면이 없습니다.** `haniel.yaml`의 `mcp.enabled`와 `dashboard.enabled`가 둘 다 `false`이고, MCP 포트에 LISTEN하는 프로세스가 없습니다. `haniel_update_repo_config`·`haniel_update_service_config`·`haniel_pull` 같은 MCP 도구는 여기서 쓸 수 없습니다. resident haniel은 폴링 중 `haniel.yaml`을 다시 읽지도 않으므로, 설정 파일만 고쳐 두는 것도 반영되지 않습니다.
+
+살아 있는 제어 표면은 haniel-orch의 REST 하나입니다.
+
+```
+POST http://127.0.0.1:9300/api/orch/service-command
+Authorization: Bearer <AUTH_BEARER_TOKEN>
+```
+
+토큰은 haniel-orch의 env 파일(`production-staging/config/haniel-orch.env`, 모드 600)에 `AUTH_BEARER_TOKEN`으로 들어 있습니다. 파일에서 읽어 환경변수로 넘기고, 값을 명령 인자나 로그에 남기지 마십시오.
+
+`action`은 `start`·`restart`·`stop`·`reload`·`reload-config`·`register-service`·`register-repo` 중 하나입니다. **최초 등록은 `register-service` 한 번이 전부입니다** — 이 한 호출이 리포와 서비스 설정을 기록하고, 리포를 clone하고, 리포 `post_pull`과 서비스 `post_pull`(빌드 훅)을 돌리고, 그 서비스만 기동합니다. 다른 서비스는 건드리지 않습니다.
+
+```json
+{
+  "node_id": "eiaserinnys",
+  "service_name": "community-translator-server",
+  "action": "register-service",
+  "payload": {
+    "repo": "community-translator",
+    "repo_config": { "...": "yaml.example의 repos.community-translator 객체 그대로" },
+    "service_config": { "...": "yaml.example의 services.community-translator-server 객체 그대로" }
+  }
+}
+```
+
+`payload.service_config`가 없으면 400입니다. 같은 이름의 서비스가 이미 있으면 `Service already exists`로 거부하므로, 등록이 끝난 뒤 설정만 고쳤다면 `reload-config`로 재독을, 기동 제어만 필요하면 `restart`를 쓰십시오.
+
+이 API는 fire-and-forget입니다. `{"command_id": ..., "status": "sent"}`를 즉시 돌려주고 orch는 30초 뒤 타임아웃 result를 브로드캐스트하지만, 노드는 그 뒤로도 계속 실행합니다. 빌드는 30초보다 오래 걸리므로 이 타임아웃을 실패로 읽지 마십시오. 진행은 haniel 로그와 포트로 확인합니다.
 
 빌드 훅이 깨지면 서비스가 아예 뜨지 않고 재시도도 없습니다. 로그에 폴링만 반복되면 빌드 실패를 의심하십시오.
 
@@ -65,18 +93,27 @@ curl --fail --silent --show-error http://127.0.0.1:3119/health
 
 ## 4. DNS, 인증서, nginx
 
-`translator.eiaserinnys.me` A 레코드를 먼저 만듭니다. `deploy/nginx/translator.eiaserinnys.me.http.conf`를 사이트로 설치하고 `nginx -t` 후 reload합니다. 이 부트스트랩은 ACME와 `/health`만 노출하며, 번역 엔드포인트는 평문 HTTP로 열리지 않습니다.
+`translator.eiaserinnys.me` A 레코드를 먼저 만듭니다. `eiaserinnys.me`는 Cloudflare에 있고 **와일드카드 A 레코드가 없으므로** 서브도메인마다 레코드를 직접 만들어야 합니다. 값은 이 호스트의 공인 IP(`62.83.18.43`), TTL 300, 그리고 **`proxied=false`**(DNS only)입니다. zone DNS 편집 권한이 있는 토큰은 `/etc/letsencrypt/credentials/cloudflare-eiaserinnys-me.ini`(root, 모드 600)에 있습니다.
 
-DNS가 해석되면 사이트를 건드리지 않고 인증서만 발급합니다.
+**프록시는 반드시 꺼야 합니다.** Cloudflare 무료 플랜의 프록시는 응답을 100초에서 끊는데, 이 사이트의 `proxy_read_timeout`은 300초이고 `xhigh` 추론은 분 단위가 걸립니다. 프록시를 켜면 100초에서 잘린 응답이 확장에 오류로 도착합니다.
+
+`deploy/nginx/translator.eiaserinnys.me.http.conf`를 사이트로 설치하고 `nginx -t` 후 reload합니다. 이 부트스트랩은 ACME와 `/health`만 노출하며, 번역 엔드포인트는 평문 HTTP로 열리지 않습니다.
+
+DNS가 해석되면 사이트를 건드리지 않고 인증서만 발급합니다. 이 호스트에는 ACME 계정이 둘 있어 `--account` 없이는 대화형 선택에서 멈춥니다. 앱 서브도메인들이 공통으로 쓰는 계정은 `1e32f450`으로 시작합니다. 전체 id는 이미 발급된 사이트의 renewal conf에서 그대로 가져오십시오.
 
 ```bash
-certbot certonly --webroot -w /var/www/html -d translator.eiaserinnys.me \
+ACME_ACCOUNT=$(sudo sed -n 's/^account = //p' /etc/letsencrypt/renewal/clipper.eiaserinnys.me.conf)
+
+sudo certbot certonly --webroot -w /var/www/html -d translator.eiaserinnys.me \
+  --account "$ACME_ACCOUNT" \
   --non-interactive --agree-tos --email eiaserinnys@gmail.com
 ```
 
 `deploy/nginx/translator.eiaserinnys.me.tls.conf`로 교체하고 `nginx -t` 후 reload합니다. 443 리스너에 프로토콜 옵션을 추가하지 마십시오. 이 소켓은 호스트의 다른 사이트와 공유합니다.
 
 `proxy_read_timeout`은 300초입니다. `xhigh` 추론은 분 단위가 걸릴 수 있어, 이 값이 짧으면 번역이 아직 생성 중인데 확장에는 실패로 보입니다.
+
+갱신은 `certbot.timer`가 하고, 갱신된 인증서를 nginx에 물리는 일은 호스트 전역 훅 `/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh`(`nginx -t && systemctl reload nginx`)가 합니다. 이 훅이 없으면 갱신은 되는데 nginx가 만료된 인증서를 계속 물고 있습니다.
 
 ## 5. 라이브 확인
 
