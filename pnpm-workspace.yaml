@@ -5,8 +5,11 @@ packages:
   - packages/eslint-config
   - packages/typescript-config
 
+# Dependencies allowed to run install scripts. Anything not listed is refused, and
+# `pnpm install --frozen-lockfile` fails rather than quietly skipping it.
 allowBuilds:
   esbuild: true
+  spawn-sync: true
 
 catalog:
   '@eslint/js': 10.0.1
