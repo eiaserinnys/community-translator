@@ -1,0 +1,18 @@
+repos:
+  community-translator:
+    url: git@github.com:eiaserinnys/community-translator.git
+    branch: main
+    path: ./services/community-translator
+    auto_apply: false
+    pull_strategy: force
+
+services:
+  community-translator-server:
+    enabled: true
+    run: bash -lc 'set -a && source /home/eias/services/community-translator/shared/server/.env && set +a && exec env NODE_ENV=production /home/eias/.nvm/versions/node/v24.18.0/bin/node apps/server/dist/main.js'
+    cwd: ./services/community-translator
+    repo: community-translator
+    ready: port:3119
+    restart_delay: 10
+    hooks:
+      post_pull: /home/eias/services/haniel/services/community-translator/deploy/haniel/build-community-translator.sh
