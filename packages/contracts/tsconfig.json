@@ -1,0 +1,4 @@
+{
+  "extends": "@community-translator/typescript-config/node.json",
+  "include": ["src/**/*.ts"]
+}

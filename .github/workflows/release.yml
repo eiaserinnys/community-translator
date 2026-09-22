@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.15.0
+          run_install: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.18.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build the extension and its workspace dependencies
+        run: pnpm --filter "@community-translator/extension..." run build
+      - name: Package the Chrome extension
+        # Zipped from inside the build output so manifest.json sits at the zip
+        # root, which is what "load unpacked" expects after extraction.
+        run: |
+          cd apps/extension/.output/chrome-mv3
+          zip -r "$GITHUB_WORKSPACE/community-translator-$GITHUB_REF_NAME.zip" .
+      - name: Create the GitHub release with the extension attached
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            "community-translator-$GITHUB_REF_NAME.zip"

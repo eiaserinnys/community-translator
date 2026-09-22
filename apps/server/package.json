@@ -1,0 +1,29 @@
+{
+  "name": "@community-translator/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "node --env-file=.env --import tsx src/main.ts",
+    "lint": "eslint .",
+    "start": "node --env-file=.env dist/main.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@community-translator/contracts": "workspace:*",
+    "fastify": "catalog:",
+    "yaml": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@community-translator/eslint-config": "workspace:*",
+    "@community-translator/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
