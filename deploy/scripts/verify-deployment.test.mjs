@@ -31,6 +31,8 @@ async function mutate(root, relativePath, transform) {
 const ENVIRONMENT = "deploy/haniel/server.env.example";
 const TLS = "deploy/nginx/translator.eiaserinnys.me.tls.conf";
 const HANIEL = "deploy/haniel/community-translator.yaml.example";
+const HANIEL_ABSOLUTE = "/home/eias/services/haniel/services/community-translator";
+const HANIEL_RELATIVE = "./services/community-translator";
 
 test("accepts the canonical placeholder-only deployment assets", async (t) => {
   const result = verify(await createFixture(t));
@@ -94,6 +96,18 @@ test("rejects a Haniel repository that would deploy on merge", async (t) => {
   const result = verify(root);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /separate decisions/u);
+});
+
+test("rejects a Haniel path haniel would resolve against its config directory", async (t) => {
+  const root = await createFixture(t);
+  await mutate(root, HANIEL, (body) =>
+    body
+      .replaceAll(`path: ${HANIEL_ABSOLUTE}`, `path: ${HANIEL_RELATIVE}`)
+      .replaceAll(`cwd: ${HANIEL_ABSOLUTE}`, `cwd: ${HANIEL_RELATIVE}`),
+  );
+  const result = verify(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /absolute path and cwd/u);
 });
 
 test("rejects a build hook that no longer targets the server workspace", async (t) => {

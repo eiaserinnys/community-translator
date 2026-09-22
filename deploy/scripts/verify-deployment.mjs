@@ -41,10 +41,23 @@ for (const expected of [
 if (content.haniel.includes("auto_apply: true")) {
   throw new Error(`${files.haniel} must keep merging and deploying separate decisions.`);
 }
+// haniel resolves repo.path against its own config directory, so "./services/..."
+// lands next to haniel.yaml instead of the directory the build hook hardcodes as ROOT.
+// Checked before the presence list so the reason names the resolution rule.
+for (const relative of [/^\s*path:\s*\.\//mu, /^\s*cwd:\s*\.\//mu]) {
+  if (relative.test(content.haniel)) {
+    throw new Error(
+      `${files.haniel} must give an absolute path and cwd: haniel resolves relative ones against its config directory.`,
+    );
+  }
+}
+
 for (const expected of [
   "community-translator-server:",
   "auto_apply: false",
   "ready: port:3119",
+  "path: /home/eias/services/haniel/services/community-translator",
+  "cwd: /home/eias/services/haniel/services/community-translator",
   "/home/eias/services/community-translator/shared/server/.env",
   "/home/eias/.nvm/versions/node/v24.18.0/bin/node",
   "/home/eias/services/haniel/services/community-translator/deploy/haniel/build-community-translator.sh",
@@ -114,6 +127,12 @@ for (const expected of [
   "community-translator-server",
   "glossary.yaml",
   "## 롤백",
+  // This host has no haniel MCP surface and no wildcard DNS. A runbook missing these
+  // sends the next deployer down control paths that do not exist here.
+  "/api/orch/service-command",
+  "register-service",
+  "--account",
+  "proxied=false",
 ]) {
   requireText("runbook", expected);
 }
