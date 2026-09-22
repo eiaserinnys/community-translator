@@ -13,8 +13,8 @@ describe("normalizeApiSettings", () => {
   });
 
   it("accepts loopback http for local development", () => {
-    expect(normalizeApiSettings({ serverUrl: "http://127.0.0.1:3120", token: "t" })).toEqual({
-      baseUrl: "http://127.0.0.1:3120",
+    expect(normalizeApiSettings({ serverUrl: "http://127.0.0.1:3119", token: "t" })).toEqual({
+      baseUrl: "http://127.0.0.1:3119",
       token: "t",
     });
   });
@@ -40,7 +40,7 @@ describe("normalizeApiSettings", () => {
 
 describe("createTranslatorClient", () => {
   it("posts to /translate with the bearer token", async () => {
-    const fetch = vi.fn(
+    const fetch = vi.fn<typeof globalThis.fetch>(
       async () =>
         new Response(
           JSON.stringify({ glossaryTerms: 0, model: "gpt-5.6-luna", target: "KO", text: "안녕" }),
@@ -49,7 +49,7 @@ describe("createTranslatorClient", () => {
     );
     const client = createTranslatorClient({
       baseUrl: "https://translator.example/",
-      fetch: fetch as unknown as typeof globalThis.fetch,
+      fetch,
       token: "secret-token",
     });
 
@@ -58,7 +58,9 @@ describe("createTranslatorClient", () => {
     });
 
     expect(data?.text).toBe("안녕");
-    const request = fetch.mock.calls[0]?.[0] as Request;
+    const [input] = fetch.mock.calls[0] ?? [];
+    expect(input).toBeInstanceOf(Request);
+    const request = input as Request;
     expect(request.url).toBe("https://translator.example/translate");
     expect(request.method).toBe("POST");
     expect(request.headers.get("Authorization")).toBe("Bearer secret-token");

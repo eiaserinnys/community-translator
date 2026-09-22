@@ -24,6 +24,8 @@ const SERVER_MESSAGES: Record<TranslationErrorCode, string> = {
   invalid_request: "번역 요청을 처리할 수 없어요. 문장이 너무 길거나 형식이 맞지 않습니다.",
   translation_busy: "번역 요청이 몰려 있어요. 잠시 후 다시 시도해 주세요.",
   translation_failed: "번역 서버가 결과를 만들지 못했어요. 다시 시도해 주세요.",
+  translation_quota_exhausted:
+    "번역 서버의 codex 사용량 한도가 다 찼어요. 한도가 초기화될 때까지 번역할 수 없습니다.",
   translation_timeout: "번역 시간이 초과됐어요. 다시 시도해 주세요.",
   translation_unavailable: "번역 서버에서 codex 실행 파일을 찾지 못했어요. 서버 설정을 확인해 주세요.",
   unauthorized: "서버 토큰이 맞지 않아요. 확장 설정에서 토큰을 확인해 주세요.",

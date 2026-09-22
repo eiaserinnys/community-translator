@@ -80,7 +80,6 @@ describe("parseCodexJsonl", () => {
 describe("CodexEphemeralExecutor", () => {
   const request = {
     concurrencyLimit: 1,
-    maxAttempts: 1,
     model: "gpt-5.6-luna",
     prompt: "translate this",
     reasoningEffort: "xhigh" as const,
@@ -88,11 +87,15 @@ describe("CodexEphemeralExecutor", () => {
   };
 
   it("returns the agent message and forwards the prompt on stdin", async () => {
-    const execute = vi.fn(async () => ({ stderr: "", stdout: jsonl("Hello") }));
+    const execute = vi.fn<CodexExecProcessPort["execute"]>(async () => ({
+      exitCode: 0,
+      stderr: "",
+      stdout: jsonl("Hello"),
+    }));
     const executor = new CodexEphemeralExecutor({
       codexPath: "/usr/bin/codex",
-      processPort: { execute } as CodexExecProcessPort,
       processEnv: { PATH: "/usr/bin" },
+      processPort: { execute },
     });
 
     const result = await executor.generate(request);
@@ -113,12 +116,12 @@ describe("CodexEphemeralExecutor", () => {
   it("classifies a failing attempt and keeps the error code", async () => {
     const executor = new CodexEphemeralExecutor({
       codexPath: "/usr/bin/codex",
+      processEnv: {},
       processPort: {
         execute: async () => {
           throw new Error("boom");
         },
       },
-      processEnv: {},
     });
 
     const failure = await executor.generate(request).catch((error: unknown) => error);
@@ -131,16 +134,16 @@ describe("CodexEphemeralExecutor", () => {
     let peak = 0;
     const executor = new CodexEphemeralExecutor({
       codexPath: "/usr/bin/codex",
+      processEnv: {},
       processPort: {
         execute: async () => {
           active += 1;
           peak = Math.max(peak, active);
           await new Promise((resolve) => setTimeout(resolve, 5));
           active -= 1;
-          return { stderr: "", stdout: jsonl("ok") };
+          return { exitCode: 0, stderr: "", stdout: jsonl("ok") };
         },
       },
-      processEnv: {},
     });
 
     await Promise.all(
@@ -158,16 +161,16 @@ describe("CodexEphemeralExecutor", () => {
     });
     const executor = new CodexEphemeralExecutor({
       codexPath: "/usr/bin/codex",
+      processEnv: {},
       processPort: {
         execute: async (_invocation, prompt) => {
           started.push(Number(prompt));
           if (started.length === 1) {
             await gate;
           }
-          return { stderr: "", stdout: jsonl("ok") };
+          return { exitCode: 0, stderr: "", stdout: jsonl("ok") };
         },
       },
-      processEnv: {},
     });
 
     const runs = [1, 2, 3, 4].map((index) =>

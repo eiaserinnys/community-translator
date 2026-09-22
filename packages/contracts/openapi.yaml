@@ -140,6 +140,7 @@ components:
             - translation_busy
             - translation_timeout
             - translation_unavailable
+            - translation_quota_exhausted
             - translation_failed
         message:
           type: string
