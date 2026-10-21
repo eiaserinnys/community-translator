@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT=/home/eias/services/haniel/services/community-translator
-NODE_BIN=/home/eias/.nvm/versions/node/v24.18.0/bin
+NODE_BIN=/opt/node/24/bin
 
 # A clean environment on purpose: the translation server spawns codex, and an
 # OPENAI_API_KEY inherited through the build would change how codex bills.

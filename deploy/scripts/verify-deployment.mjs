@@ -29,7 +29,7 @@ function requireText(name, expected) {
 }
 
 for (const expected of [
-  "/home/eias/.nvm/versions/node/v24.18.0/bin",
+  "/opt/node/24/bin",
   'pnpm --dir "$ROOT" --filter "@community-translator/server..." install',
   'pnpm --dir "$ROOT" --filter "@community-translator/server..." run build',
 ]) {
@@ -59,7 +59,7 @@ for (const expected of [
   "path: /home/eias/services/haniel/services/community-translator",
   "cwd: /home/eias/services/haniel/services/community-translator",
   "/home/eias/services/community-translator/shared/server/.env",
-  "/home/eias/.nvm/versions/node/v24.18.0/bin/node",
+  "/opt/node/24/bin/node",
   "/home/eias/services/haniel/services/community-translator/deploy/haniel/build-community-translator.sh",
 ]) {
   requireText("haniel", expected);
