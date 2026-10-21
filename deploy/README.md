@@ -6,7 +6,7 @@
 
 - haniel 리포: `community-translator`
 - haniel 서비스: `community-translator-server`
-- 런타임: `/home/eias/.nvm/versions/node/v24.18.0/bin/node`
+- 런타임: `/opt/node/24/bin/node`
 - loopback: `127.0.0.1:3119`
 - 외부 주소: `https://translator.eiaserinnys.me`
 - 공유 환경변수: `/home/eias/services/community-translator/shared/server/.env`
