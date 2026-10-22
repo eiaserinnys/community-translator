@@ -1,20 +1,20 @@
 repos:
   community-translator:
-    url: git@github.com:eiaserinnys/community-translator.git
+    url: git@github.com:example/community-translator.git
     branch: main
-    # haniel resolves a relative path against its own config directory, not against
-    # the directory the build hook hardcodes as ROOT. Keep this absolute.
-    path: /home/eias/services/haniel/services/community-translator
+    # The service manager resolves relative paths against its configuration directory.
+    # Keep this absolute so it matches the build hook's repository root.
+    path: /srv/haniel/services/community-translator
     auto_apply: false
     pull_strategy: force
 
 services:
   community-translator-server:
     enabled: true
-    run: bash -lc 'set -a && source /home/eias/services/community-translator/shared/server/.env && set +a && exec env NODE_ENV=production /opt/node/24/bin/node apps/server/dist/main.js'
-    cwd: /home/eias/services/haniel/services/community-translator
+    run: bash -lc 'set -a && source /srv/community-translator/shared/server/.env && set +a && exec env NODE_ENV=production /opt/node/24/bin/node apps/server/dist/main.js'
+    cwd: /srv/haniel/services/community-translator
     repo: community-translator
     ready: port:3119
     restart_delay: 10
     hooks:
-      post_pull: /home/eias/services/haniel/services/community-translator/deploy/haniel/build-community-translator.sh
+      post_pull: /srv/haniel/services/community-translator/deploy/haniel/build-community-translator.sh

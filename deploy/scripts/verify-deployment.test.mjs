@@ -29,10 +29,11 @@ async function mutate(root, relativePath, transform) {
 }
 
 const ENVIRONMENT = "deploy/haniel/server.env.example";
-const TLS = "deploy/nginx/translator.eiaserinnys.me.tls.conf";
-const HANIEL = "deploy/haniel/community-translator.yaml.example";
-const HANIEL_ABSOLUTE = "/home/eias/services/haniel/services/community-translator";
-const HANIEL_RELATIVE = "./services/community-translator";
+const BUILD = "deploy/haniel/build-community-translator.sh";
+const TLS = "deploy/nginx/translator.example.com.tls.conf";
+const SERVICE_CONFIG = "deploy/haniel/community-translator.yaml.example";
+const SERVICE_ROOT = "/srv/haniel/services/community-translator";
+const RELATIVE_SERVICE_ROOT = "./services/community-translator";
 
 test("accepts the canonical placeholder-only deployment assets", async (t) => {
   const result = verify(await createFixture(t));
@@ -90,20 +91,20 @@ for (const listener of ["listen 443 ssl;", "listen [::]:443 ssl;"]) {
   });
 }
 
-test("rejects a Haniel repository that would deploy on merge", async (t) => {
+test("rejects a repository that would deploy on merge", async (t) => {
   const root = await createFixture(t);
-  await mutate(root, HANIEL, (body) => body.replace("auto_apply: false", "auto_apply: true"));
+  await mutate(root, SERVICE_CONFIG, (body) => body.replace("auto_apply: false", "auto_apply: true"));
   const result = verify(root);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /separate decisions/u);
 });
 
-test("rejects a Haniel path haniel would resolve against its config directory", async (t) => {
+test("rejects a relative repository path resolved from the service config directory", async (t) => {
   const root = await createFixture(t);
-  await mutate(root, HANIEL, (body) =>
+  await mutate(root, SERVICE_CONFIG, (body) =>
     body
-      .replaceAll(`path: ${HANIEL_ABSOLUTE}`, `path: ${HANIEL_RELATIVE}`)
-      .replaceAll(`cwd: ${HANIEL_ABSOLUTE}`, `cwd: ${HANIEL_RELATIVE}`),
+      .replaceAll(`path: ${SERVICE_ROOT}`, `path: ${RELATIVE_SERVICE_ROOT}`)
+      .replaceAll(`cwd: ${SERVICE_ROOT}`, `cwd: ${RELATIVE_SERVICE_ROOT}`),
   );
   const result = verify(root);
   assert.notEqual(result.status, 0);
@@ -112,11 +113,24 @@ test("rejects a Haniel path haniel would resolve against its config directory", 
 
 test("rejects a build hook that no longer targets the server workspace", async (t) => {
   const root = await createFixture(t);
-  await mutate(root, "deploy/haniel/build-community-translator.sh", (body) =>
+  await mutate(root, BUILD, (body) =>
     body.replace('--filter "@community-translator/server..." run build', "run build"),
   );
   const result = verify(root);
   assert.notEqual(result.status, 0);
+});
+
+test("rejects a build hook with a fixed repository path", async (t) => {
+  const root = await createFixture(t);
+  await mutate(root, BUILD, (body) =>
+    body.replace(
+      'ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"',
+      'ROOT="/srv/haniel/services/community-translator"',
+    ),
+  );
+  const result = verify(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /ROOT=/u);
 });
 
 test("rejects a missing deployment asset", async (t) => {

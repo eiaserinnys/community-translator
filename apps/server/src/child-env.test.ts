@@ -18,8 +18,8 @@ describe("sanitizeChildProcessEnv", () => {
   });
 
   it("drops undefined values instead of forwarding them", () => {
-    expect(sanitizeChildProcessEnv({ HOME: "/home/eias", MISSING: undefined })).toEqual({
-      HOME: "/home/eias",
+    expect(sanitizeChildProcessEnv({ HOME: "/home/runner", MISSING: undefined })).toEqual({
+      HOME: "/home/runner",
     });
   });
 

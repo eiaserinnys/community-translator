@@ -7,7 +7,7 @@ import {
   type CodexExecProcessPort,
 } from "./codex-executor.js";
 
-// Captured verbatim from codex-cli 0.153.4 on eiaserinnys: exit code 1, empty stderr,
+// Captured verbatim from codex-cli 0.153.4: exit code 1, empty stderr,
 // the whole reason carried on stdout.
 const QUOTA_MESSAGE =
   "You've hit your usage limit. Visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at Sep 26th, 2026 5:23 PM.";

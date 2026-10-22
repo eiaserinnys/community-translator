@@ -1,18 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT=/home/eias/services/haniel/services/community-translator
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 NODE_BIN=/opt/node/24/bin
+USER_NAME="${USER:-$(id -un)}"
+HOME_DIR="${HOME:-$(getent passwd "$USER_NAME" | cut -d: -f6)}"
 
 # A clean environment on purpose: the translation server spawns codex, and an
 # OPENAI_API_KEY inherited through the build would change how codex bills.
 clean_env=(
   env -i
-  HOME=/home/eias
-  USER=eias
-  LOGNAME=eias
+  HOME="$HOME_DIR"
+  USER="$USER_NAME"
+  LOGNAME="$USER_NAME"
   SHELL=/bin/bash
-  PATH="$NODE_BIN:/home/eias/.local/bin:/home/eias/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  PATH="$NODE_BIN:$HOME_DIR/.local/bin:$HOME_DIR/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
   NODE_ENV=development
 )
 
