@@ -11,7 +11,7 @@ const environment = {
   TRANSLATOR_CODEX_QUEUE_LIMIT: "32",
   TRANSLATOR_CODEX_REASONING_EFFORT: "xhigh",
   TRANSLATOR_CODEX_TIMEOUT_MS: "120000",
-  TRANSLATOR_GLOSSARY_FILE: "/home/eias/services/community-translator/shared/glossary.yaml",
+  TRANSLATOR_GLOSSARY_FILE: "/srv/community-translator/shared/glossary.yaml",
 };
 
 describe("loadServerConfig", () => {
@@ -25,7 +25,7 @@ describe("loadServerConfig", () => {
         reasoningEffort: "xhigh",
         timeoutMs: 120_000,
       },
-      glossaryFile: "/home/eias/services/community-translator/shared/glossary.yaml",
+      glossaryFile: "/srv/community-translator/shared/glossary.yaml",
       host: "127.0.0.1",
       port: 3120,
     });

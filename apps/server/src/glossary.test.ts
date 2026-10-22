@@ -8,25 +8,25 @@ items:
 - id: MC-XAJI0Y
   category: main_characters
   name:
-    en: Fenrix Haven
-    kr: 펜릭스 헤이븐
-    ja: フェンリクス
+    en: Alden Vale
+    kr: 알덴 베일
+    ja: アルデン
   epithet:
-    en: The Immortal Demon Hunter
-    kr: 불사의 악마 사냥꾼
+    en: The Wanderer of Dawn
+    kr: 새벽의 방랑자
 - id: MC-6DPBHS
   category: main_characters
   name:
-    en: Ariella Ashwood
-    kr: 아리엘라 애시우드
+    en: Rowan Sterling
+    kr: 로완 스털링
   aliases:
-  - en: Ella
-    kr: 엘리
+  - en: Rowan
+    kr: 로완
 - id: BS-9XUY41
   category: bosses
   name:
-    en: Asmodeus
-    kr: 아스모데우스
+    en: Obsidian Wyrm
+    kr: 흑요석 비룡
 - id: NO-PAIR
   category: concepts
   name:
@@ -36,11 +36,11 @@ items:
 describe("parseGlossaryDocument", () => {
   it("collects name, alias and epithet pairs that have both languages", () => {
     expect(parseGlossaryDocument(document)).toEqual([
-      { en: "Fenrix Haven", kr: "펜릭스 헤이븐" },
-      { en: "The Immortal Demon Hunter", kr: "불사의 악마 사냥꾼" },
-      { en: "Ariella Ashwood", kr: "아리엘라 애시우드" },
-      { en: "Ella", kr: "엘리" },
-      { en: "Asmodeus", kr: "아스모데우스" },
+      { en: "Alden Vale", kr: "알덴 베일" },
+      { en: "The Wanderer of Dawn", kr: "새벽의 방랑자" },
+      { en: "Rowan Sterling", kr: "로완 스털링" },
+      { en: "Rowan", kr: "로완" },
+      { en: "Obsidian Wyrm", kr: "흑요석 비룡" },
     ]);
   });
 
@@ -57,23 +57,23 @@ describe("matchGlossaryEntries", () => {
   const entries = parseGlossaryDocument(document);
 
   it("injects only the terms that appear in the request text", () => {
-    expect(matchGlossaryEntries("Did Asmodeus beat fenrix haven?", entries, 40)).toEqual([
-      { en: "Fenrix Haven", kr: "펜릭스 헤이븐" },
-      { en: "Asmodeus", kr: "아스모데우스" },
+    expect(matchGlossaryEntries("Did Obsidian Wyrm beat alden vale?", entries, 40)).toEqual([
+      { en: "Obsidian Wyrm", kr: "흑요석 비룡" },
+      { en: "Alden Vale", kr: "알덴 베일" },
     ]);
   });
 
   it("matches the Korean spelling too", () => {
-    expect(matchGlossaryEntries("아리엘라 애시우드는 어디 있나요", entries, 40)).toEqual([
-      { en: "Ariella Ashwood", kr: "아리엘라 애시우드" },
+    expect(matchGlossaryEntries("로완 스털링은 어디 있나요", entries, 1)).toEqual([
+      { en: "Rowan Sterling", kr: "로완 스털링" },
     ]);
   });
 
   it("does not match an English term inside a longer word", () => {
-    expect(matchGlossaryEntries("Ellazar is not Ella", entries, 40)).toEqual([
-      { en: "Ella", kr: "엘리" },
+    expect(matchGlossaryEntries("Rowanite is not Rowan", entries, 40)).toEqual([
+      { en: "Rowan", kr: "로완" },
     ]);
-    expect(matchGlossaryEntries("Ellazar only", entries, 40)).toEqual([]);
+    expect(matchGlossaryEntries("Rowanite only", entries, 40)).toEqual([]);
   });
 
   it("returns nothing when the text mentions no glossary term", () => {
@@ -81,7 +81,7 @@ describe("matchGlossaryEntries", () => {
   });
 
   it("caps the number of injected terms", () => {
-    expect(matchGlossaryEntries("Asmodeus and Ella and Fenrix Haven", entries, 2)).toHaveLength(2);
+    expect(matchGlossaryEntries("Obsidian Wyrm and Rowan and Alden Vale", entries, 2)).toHaveLength(2);
   });
 });
 

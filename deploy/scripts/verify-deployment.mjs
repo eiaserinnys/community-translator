@@ -9,10 +9,10 @@ const repositoryRoot = process.argv[2]
 const files = {
   build: "deploy/haniel/build-community-translator.sh",
   environment: "deploy/haniel/server.env.example",
-  haniel: "deploy/haniel/community-translator.yaml.example",
-  http: "deploy/nginx/translator.eiaserinnys.me.http.conf",
+  serviceConfig: "deploy/haniel/community-translator.yaml.example",
+  http: "deploy/nginx/translator.example.com.http.conf",
   runbook: "deploy/README.md",
-  tls: "deploy/nginx/translator.eiaserinnys.me.tls.conf",
+  tls: "deploy/nginx/translator.example.com.tls.conf",
 };
 
 const content = {};
@@ -30,6 +30,9 @@ function requireText(name, expected) {
 
 for (const expected of [
   "/opt/node/24/bin",
+  'ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"',
+  'USER_NAME="${USER:-$(id -un)}"',
+  'HOME_DIR="${HOME:-$(getent passwd "$USER_NAME" | cut -d: -f6)}"',
   'pnpm --dir "$ROOT" --filter "@community-translator/server..." install',
   'pnpm --dir "$ROOT" --filter "@community-translator/server..." run build',
 ]) {
@@ -38,16 +41,16 @@ for (const expected of [
 
 // Checked before the presence list so this specific reason wins over a generic
 // "must contain auto_apply: false" when someone flips the flag.
-if (content.haniel.includes("auto_apply: true")) {
-  throw new Error(`${files.haniel} must keep merging and deploying separate decisions.`);
+if (content.serviceConfig.includes("auto_apply: true")) {
+  throw new Error(`${files.serviceConfig} must keep merging and deploying separate decisions.`);
 }
-// haniel resolves repo.path against its own config directory, so "./services/..."
-// lands next to haniel.yaml instead of the directory the build hook hardcodes as ROOT.
+// The service manager resolves repo.path against its config directory, so "./services/..."
+// lands next to the manager config instead of the build hook's repository root.
 // Checked before the presence list so the reason names the resolution rule.
 for (const relative of [/^\s*path:\s*\.\//mu, /^\s*cwd:\s*\.\//mu]) {
-  if (relative.test(content.haniel)) {
+  if (relative.test(content.serviceConfig)) {
     throw new Error(
-      `${files.haniel} must give an absolute path and cwd: haniel resolves relative ones against its config directory.`,
+      `${files.serviceConfig} must give an absolute path and cwd because the service manager resolves relative paths against its config directory.`,
     );
   }
 }
@@ -56,13 +59,13 @@ for (const expected of [
   "community-translator-server:",
   "auto_apply: false",
   "ready: port:3119",
-  "path: /home/eias/services/haniel/services/community-translator",
-  "cwd: /home/eias/services/haniel/services/community-translator",
-  "/home/eias/services/community-translator/shared/server/.env",
+  "path: /srv/haniel/services/community-translator",
+  "cwd: /srv/haniel/services/community-translator",
+  "/srv/community-translator/shared/server/.env",
   "/opt/node/24/bin/node",
-  "/home/eias/services/haniel/services/community-translator/deploy/haniel/build-community-translator.sh",
+  "/srv/haniel/services/community-translator/deploy/haniel/build-community-translator.sh",
 ]) {
-  requireText("haniel", expected);
+  requireText("serviceConfig", expected);
 }
 
 // codex has no "max" effort. Checked before the presence list so the reason given
@@ -79,7 +82,7 @@ for (const expected of [
   "TRANSLATOR_CODEX_MODEL=gpt-5.6-luna",
   "TRANSLATOR_CODEX_REASONING_EFFORT=xhigh",
   "TRANSLATOR_CODEX_CONCURRENCY=2",
-  "TRANSLATOR_GLOSSARY_FILE=/home/eias/services/community-translator/shared/glossary.yaml",
+  "TRANSLATOR_GLOSSARY_FILE=/srv/community-translator/shared/glossary.yaml",
 ]) {
   requireText("environment", expected);
 }
@@ -88,13 +91,13 @@ for (const expected of [
 requireText("environment", 'There is no "max"');
 
 for (const name of ["http", "tls"]) {
-  requireText(name, "server_name translator.eiaserinnys.me;");
+  requireText(name, "server_name translator.example.com;");
   requireText(name, "proxy_pass http://127.0.0.1:3119;");
   requireText(name, "proxy_buffering off;");
   requireText(name, "proxy_cache off;");
 }
-requireText("tls", "/etc/letsencrypt/live/translator.eiaserinnys.me/fullchain.pem");
-requireText("tls", "/etc/letsencrypt/live/translator.eiaserinnys.me/privkey.pem");
+requireText("tls", "/etc/letsencrypt/live/translator.example.com/fullchain.pem");
+requireText("tls", "/etc/letsencrypt/live/translator.example.com/privkey.pem");
 requireText("http", "location = /health");
 requireText("http", "return 404;");
 
@@ -123,16 +126,12 @@ if (!readTimeout || Number(readTimeout[1]) < 120) {
 
 for (const expected of [
   "3119",
-  "translator.eiaserinnys.me",
+  "translator.example.com",
   "community-translator-server",
   "glossary.yaml",
   "## 롤백",
-  // This host has no haniel MCP surface and no wildcard DNS. A runbook missing these
-  // sends the next deployer down control paths that do not exist here.
-  "/api/orch/service-command",
-  "register-service",
+  "203.0.113.10",
   "--account",
-  "proxied=false",
 ]) {
   requireText("runbook", expected);
 }

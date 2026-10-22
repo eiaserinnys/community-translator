@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { buildTranslationPrompt } from "./prompt.js";
 
 const glossary = [
-  { en: "Fenrix Haven", kr: "펜릭스 헤이븐" },
-  { en: "Ella", kr: "엘리" },
+  { en: "Alden Vale", kr: "알덴 베일" },
+  { en: "Rowan", kr: "로완" },
 ];
 
 describe("buildTranslationPrompt", () => {
@@ -45,9 +45,9 @@ describe("buildTranslationPrompt", () => {
   });
 
   it("renders matched glossary terms as a bilingual list", () => {
-    const prompt = buildTranslationPrompt({ glossary, target: "KO", text: "Fenrix Haven and Ella" });
-    expect(prompt).toContain("Fenrix Haven ↔ 펜릭스 헤이븐");
-    expect(prompt).toContain("Ella ↔ 엘리");
+    const prompt = buildTranslationPrompt({ glossary, target: "KO", text: "Alden Vale and Rowan" });
+    expect(prompt).toContain("Alden Vale ↔ 알덴 베일");
+    expect(prompt).toContain("Rowan ↔ 로완");
   });
 
   it("omits the glossary section when nothing matched", () => {

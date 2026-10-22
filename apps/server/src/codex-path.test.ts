@@ -11,16 +11,16 @@ describe("candidateCodexCliPaths", () => {
   });
 
   it("adds the nvm-style home fallbacks on linux", () => {
-    const candidates = candidateCodexCliPaths({ HOME: "/home/eias" }, "linux");
+    const candidates = candidateCodexCliPaths({ HOME: "/home/runner" }, "linux");
     expect(candidates.map((candidate) => candidate.path)).toEqual([
-      "/home/eias/.npm-global/bin/codex",
-      "/home/eias/.local/bin/codex",
+      "/home/runner/.npm-global/bin/codex",
+      "/home/runner/.local/bin/codex",
     ]);
   });
 
   it("expands the spawnable windows extensions and the npm global directory", () => {
     const candidates = candidateCodexCliPaths(
-      { APPDATA: "C:\\Users\\LG\\AppData\\Roaming", Path: "C:\\tools" },
+      { APPDATA: "C:\\Users\\runner\\AppData\\Roaming", Path: "C:\\tools" },
       "win32",
     );
     expect(candidates.map((candidate) => candidate.path)).toEqual([
@@ -28,10 +28,10 @@ describe("candidateCodexCliPaths", () => {
       "C:\\tools\\codex.exe",
       "C:\\tools\\codex.bat",
       "C:\\tools\\codex.com",
-      "C:\\Users\\LG\\AppData\\Roaming\\npm\\codex.cmd",
-      "C:\\Users\\LG\\AppData\\Roaming\\npm\\codex.exe",
-      "C:\\Users\\LG\\AppData\\Roaming\\npm\\codex.bat",
-      "C:\\Users\\LG\\AppData\\Roaming\\npm\\codex.com",
+      "C:\\Users\\runner\\AppData\\Roaming\\npm\\codex.cmd",
+      "C:\\Users\\runner\\AppData\\Roaming\\npm\\codex.exe",
+      "C:\\Users\\runner\\AppData\\Roaming\\npm\\codex.bat",
+      "C:\\Users\\runner\\AppData\\Roaming\\npm\\codex.com",
     ]);
   });
 });

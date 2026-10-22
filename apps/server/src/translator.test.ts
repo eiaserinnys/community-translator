@@ -25,7 +25,7 @@ function buildTranslator(executor: ExecutorMock, overrides: Record<string, unkno
   return new CodexTranslator({
     concurrency: 2,
     executor,
-    glossary: [{ en: "Fenrix Haven", kr: "펜릭스 헤이븐" }],
+    glossary: [{ en: "Alden Vale", kr: "알덴 베일" }],
     model: "gpt-5.6-luna",
     queueLimit: 32,
     reasoningEffort: "xhigh",
@@ -36,15 +36,15 @@ function buildTranslator(executor: ExecutorMock, overrides: Record<string, unkno
 
 describe("CodexTranslator", () => {
   it("returns the model output and how many glossary terms it injected", async () => {
-    const executor = executorReturning("펜릭스 헤이븐이 왔다");
+    const executor = executorReturning("알덴 베일이 왔다");
     const translator = buildTranslator(executor);
 
     await expect(
-      translator.translate({ target: "KO", text: "Fenrix Haven is here" }),
+      translator.translate({ target: "KO", text: "Alden Vale is here" }),
     ).resolves.toEqual({
       glossaryTerms: 1,
       model: "gpt-5.6-luna",
-      text: "펜릭스 헤이븐이 왔다",
+      text: "알덴 베일이 왔다",
     });
   });
 
@@ -65,7 +65,7 @@ describe("CodexTranslator", () => {
     const result = await buildTranslator(executor).translate({ target: "KO", text: "hello there" });
 
     expect(result.glossaryTerms).toBe(0);
-    expect(executor.generate.mock.calls[0]?.[0].prompt).not.toContain("펜릭스 헤이븐");
+    expect(executor.generate.mock.calls[0]?.[0].prompt).not.toContain("알덴 베일");
   });
 
   it.each([
